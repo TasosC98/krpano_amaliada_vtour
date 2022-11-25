@@ -1,0 +1,876 @@
+﻿<krpano version="1.20.11" title="Virtual Tour">
+
+	<include url="skin/vtourskin.xml" />
+
+	<!-- customize skin settings: maps, gyro, webvr, thumbnails, tooltips, layout, design, ... -->
+	<skin_settings maps="true"
+	               maps_type="google"
+	               maps_bing_api_key=""
+	               maps_google_api_key=""
+	               maps_zoombuttons="false"
+	               maps_loadonfirstuse="true"
+	               gyro="true"
+	               gyro_keeplookingdirection="false"
+	               webvr="true"
+	               webvr_keeplookingdirection="true"
+	               webvr_prev_next_hotspots="true"
+	               autotour="false"
+	               littleplanetintro="false"
+	               followmousecontrol="false"
+	               title="true"
+	               thumbs="true"
+	               thumbs_width="120" thumbs_height="80" thumbs_padding="10" thumbs_crop="0|40|240|160"
+	               thumbs_opened="false"
+	               thumbs_text="false"
+	               thumbs_dragging="true"
+	               thumbs_onhoverscrolling="false"
+	               thumbs_scrollbuttons="false"
+	               thumbs_scrollindicator="false"
+	               thumbs_loop="false"
+	               tooltips_buttons="false"
+	               tooltips_thumbs="false"
+	               tooltips_hotspots="false"
+	               tooltips_mapspots="false"
+	               deeplinking="false"
+	               loadscene_flags="MERGE"
+	               loadscene_blend="OPENBLEND(0.5, 0.0, 0.75, 0.05, linear)"
+	               loadscene_blend_prev="SLIDEBLEND(0.5, 180, 0.75, linear)"
+	               loadscene_blend_next="SLIDEBLEND(0.5,   0, 0.75, linear)"
+	               loadingtext=""
+	               layout_width="100%"
+	               layout_maxwidth="814"
+	               controlbar_width="-24"
+	               controlbar_height="40"
+	               controlbar_offset="20"
+	               controlbar_offset_closed="-40"
+	               controlbar_overlap.no-fractionalscaling="10"
+	               controlbar_overlap.fractionalscaling="0"
+	               design_skin_images="vtourskin.png"
+	               design_bgcolor="0x2D3E50"
+	               design_bgalpha="0.8"
+	               design_bgborder="0"
+	               design_bgroundedge="1"
+	               design_bgshadow="0 4 10 0x000000 0.3"
+	               design_thumbborder_bgborder="3 0xFFFFFF 1.0"
+	               design_thumbborder_padding="2"
+	               design_thumbborder_bgroundedge="0"
+	               design_text_css="color:#FFFFFF; font-family:Arial;"
+	               design_text_shadow="1"
+	               />
+
+	<!--
+	    For an alternative skin design either change the <skin_settings> values 
+	    from above or optionally include one of the predefined designs from below.
+	-->
+	<!-- <include url="skin/vtourskin_design_flat_light.xml"  /> -->
+	<!-- <include url="skin/vtourskin_design_glass.xml"       /> -->
+	<!-- <include url="skin/vtourskin_design_ultra_light.xml" /> -->
+	<!-- <include url="skin/vtourskin_design_117.xml"         /> -->
+	<!-- <include url="skin/vtourskin_design_117round.xml"    /> -->
+	<!-- <include url="skin/vtourskin_design_black.xml"       /> -->
+
+<include url="%VIEWER%/plugins/iphone_fullscreen_swipe.xml" devices="iphone" />
+
+	<layer name="activespot" url="skin/camicon_red.png" keep="false"
+	       align="lefttop" zorder="2" scale.mobile="2"
+	       />
+    
+	
+	<layer  name = "mapcontainer"  type = "container"  keep = "true"  bgcolor = "0xD81B1B"  bgalpha = "1" align="lefttop" x="2%" y="2%" width="20%" height="30%">  
+
+<plugin name="map" devices="html5"
+
+        url="plugins/googlemaps.js"
+        keep="true"
+        key="AIzaSyCQ97ITUP80HTthojqnEob2lXE5J_-4Feg"
+ 		maptype="satellite"
+        maptypes="normal|satellite|physical|hybrid"
+		zoom="1"
+        controls="zoom"
+        poi="false"
+        activespotenabled="false"
+        bgcolor="0x000000" 
+		bgalpha="0.5"
+		bgroundedge.normal="17"
+		maskchildren="true"
+		bgshadow="0 0 20 0x000000 0.5"
+		parent.mobile="OVERLAY"
+
+        onmapready="skin_addmapspots();"
+        onmaptypechanged=""
+        onmapmoved=""
+        onmapzoomed=""
+		onloaded="skin_addmapspots();" 
+		
+
+		state="visible"
+>
+<!-- hotspot styles (black and white hotspots) -->
+
+<!-- Auto to bazw panw an thelw na pataei ston xarti kai na ginetai megalos
+		onclick.normal="tween(x|y|width|height, calc(parseint(width) LT 50 ? '5%|5%|90%|90%' : '2%|2%|20%|30%'),1.0, default);"
+ -->
+    
+
+	<!-- Hi, maps plugin won't select automatically the new scene mapspot, you have to code the 
+	function manually at onnewscene event so you can call the action activatehotspot(name);. 
+	With a custom event it would be something like: 
+	<events name="googlemaps" keep="true" onnewscene="layer[plugin_googlemaps].activatespot(get(mapspot_name_here));"/>. -->
+
+   <radar visible="true"
+       dragable="true"
+       size="100"
+       zoomwithmap="false"
+       headingoffset="180"
+       alpha="0.5"
+       fillcolor="0xFFFFFF"
+       fillalpha="1.0"
+       linewidth="0.0"
+       linecolor="0xFFFFFF"
+       linealpha="0.5"
+       glow="true"
+       glowcolor="0xFFFFFF"
+       glowwidth="4"
+       glowstrength="4"
+
+       /> 
+	   <action  name = "skin_addmapspots" >
+        for(set(i,0), i LT scene.count, inc(i),
+            if(scene[get(i)].lat,
+                <!--Set hotspot name, modify: use spot+scene name as hotspot name, -->
+                txtadd(spotname,'spot', get(scene[get(i)].name));
+                <!--Set the hotspot click event function: skin_hidetooltips() retract the toolbar after the hotspot is clicked. activatespot(',get(spotname),'); The current hot spot is selected. skin_loadscene(); Load scene -->
+                txtadd(spotclickevent,'skin_hidetooltips(); activatespot(',get(spotname),'); skin_loadscene(', get(scene[get(i)].name),',get(skin_settings.loadscene_blend)); skin_updatescroll( ); delayedcall(0.5,skin_showmap(false));');
+                <!--copy scene hotspot name-->
+                copy(scene[get(i)].mapspotname, spotname);
+                <!--Add hotspot parameters: (hotspot name, longitude, latitude, azimuth, false, click event, null) -->
+                addspot(get(spotname), get(scene[get(i)].lat), get(scene[get(i)].lng), get(scene[get(i)].heading), false, get( spotclickevent), null);
+                <!--Hover the mouse over the map hotspot whether a text prompt pops up-->
+                if(skin_settings.tooltips_mapspots,
+                    set(layer[skin_map].spot[get(spotname)].tooltip, get(scene[get(i)].title) );
+                    txtadd(layer[skin_map].spot[get(spotname)].onover,'set(hovering,true);', get(style[skin_tooltips].onover) );
+                    txtadd(layer[skin_map].spot[get(spotname)].onout,'set(hovering,false);', get(style[skin_tooltips].onout) );
+                  );
+              );
+          );
+        if(xml.scene != null,
+            activatespot( get(scene[get(xml.scene)].mapspotname) );
+          ,
+        	plugin[map].activatespot(get(mapSpotName));
+          );
+        <!-- zoom and pan the map to see all spots at the same time spotclickevent-->
+        zoomToSpotsExtent();
+    </action >
+	<action name = "skin_loadscene" >      
+         if (webvr.isenabled AND scene. count GT 1 ,
+             set (hotspot[webvr_prev_scene].visible, false );
+             set (hotspot[webvr_next_scene].visible, false );
+          );
+        txtadd(layer[skin_thumbborder].parent,'skin_thumb_', get (scene[% 1 ].index));
+        layer[skin_thumbs].scrolltocenter( get (scene[% 1 ].thumbx), get (scene[% 1 ].thumby));
+        loadscene( get (scene[% 1 ]. name ), null, get (skin_settings.loadscene_flags),% 2 );
+        <!--When the scene is switched, the map hotspot is switched. txtadd is the variable definition function. Here it is defined that the mapSpotName variable is spot plus the string of get(scene[%1].name) is the mapSpotName variable. (Because I am adding the hot event skin_addmapspots to set spot + scene name as the hot spot name, so it should be obtained here too.) -->
+        txtadd(mapSpotName,'spot', get(scene[%1].name));
+        plugin[map].activatespot(get(mapSpotName)); <!--plugin[map] is a small map, activatespot sets the map hotspot of the current scene -->
+    </action>
+ 
+
+</plugin>
+</layer>
+
+<plugin
+	name="info_off"
+	keep="true"
+	url="skin/home.png"
+	scale="0.1"
+	visible="true"
+	align="righttop"
+	edge="righttop"
+	x="10" y="10"
+	blendmode="screen"
+	onhover="showtext(Hide Infospots);"
+	onclick="looktohotspot(get(name));
+			loadscene(scene_main,null,MERGE,BLEND(1));
+			lookat(-0.91, -0.75, 20.78);
+			wait(BLEND);
+			oninterrupt(break);
+			lookto(-200.42, 24.18, 99.5, smooth(100,100,200));"
+/>
+<style name="infospot"
+			renderer="webgl"
+			type="text"
+			css="color:#FFFFFF; font-size:8px; font-weight:bold; text-align:center;"
+			
+			bgroundedge="10"
+			bgalpha="0.75"
+			bgcolor="0x555555"
+			bgborder="1 0xFFFFFF 1"
+			bgshadow="0 0 16 0x0 0.5"
+			txtshadow="0 0 3 0x0 1.0"
+			mergedalpha="false"
+			vcenter="true"
+			oversampling="2"
+			mipmapping="true"
+			zoom="true"
+			capture="false"
+			/>
+
+	<style name="hotspot_ani_black"
+	       url="skin/hotspot_ani_black_64x64x20.png"
+	       crop="0|0|64|64"
+	       frames="20" framewidth="64" frameheight="64" frame="0"
+	       onloaded="hotspot_animate();"
+	       />
+
+	<style name="hotspot_ani_white"
+	       url="skin/hotspot_ani_white_64x64x20.png"
+	       crop="0|0|64|64"
+	       frames="20" framewidth="64" frameheight="64" frame="0"
+	       onloaded="hotspot_animate();"
+	       />
+	<!-- hotspot animation code -->
+	<action name="hotspot_animate">
+		if(loaded,
+			inc(frame,1,get(frames),0);
+			mul(ypos,frame,frameheight);
+			txtadd(crop,'0|',get(ypos),'|',get(framewidth),'|',get(frameheight));
+			delayedcall(0.03, hotspot_animate() );
+		  );
+	</action>
+
+
+<!-- IMAGE BUTTONS-->
+	<action name="popup" scope="private:POPUP" args="type, content, width, height, scrollbars"><![CDATA[
+		if(popup, break(); );
+		
+		addlayer('popup_bg', popup_bg);
+		set(popup_bg,
+			type=container,
+			align=lefttop, width=100%, height=100%,
+			zorder=99,
+			handcursor=false,
+			bgcapture=true,
+			capture=false,
+			//bgcolor=0x123456, onloaded='tween(bgalpha,0.3,1.0);',	// optional: colorize the background
+			ondown='popup_close()'
+		);
+			
+		
+		addlayer('popup', popup);
+		set(popup,
+			type=container,
+			parent='popup_bg',
+			width=calc(min(width,global.stagewidth*0.9)),
+			height=calc(min(height,global.stageheight*0.8)),
+			align=center,
+			bgborder='1 0x555555 1',
+			bgcolor=0x555555,
+			bgalpha=0.7,
+			bgshadow='0 10 20 0x000000 0.5',
+			bgcapture=true,
+			maskchildren=false,
+			capture=true,
+			handcursor=false,
+			alpha=0
+		);
+		
+		/*
+		// optional: add a close button
+		addlayer('popup_close_x', closex);
+		set(closex,
+			url='%CURRENTXML%/closex.png',
+			parent='popup',
+			align=righttop,
+			edge=center,
+			scale=0.5,
+			zorder=99,
+			alpha=0.25,
+			onover='tween(alpha,1)',
+			onout='tween(alpha,0.25)',
+			ondown='tween(alpha,1)',
+			onup='tween(alpha,0.25)',
+			onclick='popup_close()'
+		);
+		*/
+
+		if(type == 'html',
+			set(popup.type, html);
+			copy(popup.html, content);
+			copy(popup.htmlscrollbars, scrollbars);
+
+		  ,type == 'iframe',
+			set(popup.type, iframe);
+			copy(popup.iframeurl, content);
+
+		  ,type == 'image',
+		 	set(popup,
+		 		bgcolor=0xFFFFFF,
+		 		bgalpha=1,
+		 	);
+			addlayer("popup_image", img);
+			set(img,
+				url=get(content),
+				align=center,
+				width=-20, height=-20,
+				parent=get(popup.name),
+				onloaded='popup_imageloaded()'
+			);
+		);
+
+		tween(global.plugin[pp_blur].range, 40.0);
+		delayedcall(0.2, tween(global.layer[popup].alpha, 1.0); );
+
+		// events when the popup should get closed automatically
+		set(global.events[popup].onremovepano, popup_close() );
+		set(global.events[popup].onresize, popup_close() );
+	]]></action>
+	
+	<!-- <action name="circlepos" scope="localonly" args="pos, total">
+		calc(caller.ox, -100 * cos((pos-1)/total * Math.PI * 2.0) );
+		calc(caller.oy, -100 * sin((pos-1)/total * Math.PI * 2.0) );
+	</action> -->
+
+	<action name="popup_close">
+		set(global.plugin[popup_bg].enabled, false);
+		set(global.events[popup].name, null);
+		tween(global.plugin[pp_blur].range, 0.0);
+		tween(global.layer[popup_bg].bgalpha, 0.0, 0.25);
+		tween(global.layer[popup].alpha, 0.0, 0.25, default,
+			removelayer('popup_bg', true);
+			scope(private:POPUP, delete(popup); );
+		);
+	</action>
+
+
+	<action name="popup_imageloaded" scope="private:POPUP">
+		calc(imgw, caller.imagewidth + 20);
+		calc(imgh, caller.imageheight + 20);
+		calc(maxw, global.stagewidth*0.9);
+		calc(maxh, global.stageheight*0.8);
+		if(imgw GT maxw,
+			calc(imgh, round(imgh * maxw / imgw));
+			copy(imgw, maxw);
+		);
+		if(imgh GT maxh,
+			calc(imgw, round(imgw * maxh / imgh));
+			copy(imgh, maxh);
+		);
+
+		set(global.layer[get(caller.parent)], width=get(imgw), height=get(imgh) );
+	</action>
+	
+	<scene name="scene_main" title="main" onstart="" thumburl="panos/main.tiles/thumb.jpg" lat="37.79342417" lng="21.35099730" heading="0.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="146.328" vlookat="16.704" fovtype="MFOV" fov="120.000" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/main.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/main.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="kentriki_plateia" style="infospot" ath="169" atv="44"
+				html="Κεντρική Πλατεία"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA_2,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Ag_Athanasios" style="infospot" ath="150" atv="40"
+				html="Άγιος Αθανάσιος"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_KENTRIKI_PLATEIA_AGIOY_ATHANASIOY,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Mpelogianni" style="infospot" ath="170" atv="30"
+				html="Μουσείο Μπελογιάννη"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_MOYSEIO_BELOGIANNI,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Politistiko_Kentro" style="infospot" ath="90" atv="26"
+				html="Πολιτιστικό Κέντρο"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_POLITISTIKO_KONTRO_AMALIADA,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Paralia_Kouroutas" style="infospot" ath="60" atv="8"
+				html="Παραλία Κουρούτας"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_PARALIA_KOUROUTA,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Pezodromos_kouroutas" style="infospot" ath="52" atv="9"
+				html="Πεζόδρομος Κουρούτας"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_PARALEIA_KOUROUTA_PEZODROMOS,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+			<hotspot name="Fragkavila" style="infospot" ath="-40" atv="12"
+				html="Μονή Φραγκαβίλας"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_I_M__PANAGIAS_FRAGKABILAS,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+			<hotspot name="Tatami" style="infospot" ath="194" atv="16"
+				html="Οικία Τατάνη"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_MOUSEIO_TATANI,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+			<hotspot name="Paralia_Palouki" style="infospot" ath="40" atv="8"
+				html="Παραλία Παλούκι"
+				width="60" height="30"
+				onloaded="circlepos(5,6);"
+
+		        onclick="
+				 		  lookto(get(ath),5,35);
+		                  loadscene(scene_PARALIA_PALOYKI,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+	</scene>
+
+	<scene name="scene_I_M__PANAGIAS_FRAGKABILAS" title="I.M. PANAGIAS FRAGKABILAS" onstart="" thumburl="panos/I_M__PANAGIAS_FRAGKABILAS.tiles/thumb.jpg" lat="37.78037572" lng="21.36251175" heading="0.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="0.0" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/I_M__PANAGIAS_FRAGKABILAS.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/I_M__PANAGIAS_FRAGKABILAS.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="more" style="infospot" ath="52" atv="23"
+			html="Περισσότερα"
+			css="color:#FFFFFF; font-size:12px; font-weight:bold; text-align:center;"
+			width="80" height="80"
+			bgroundedge="42"
+			bgalpha="0.75"
+			onloaded="circlepos(1,6);"
+			onclick="popup('html', get(data[data_html_agwnwn].content), 400, 200, true);"
+		/>
+		<data name="data_html_agwnwn"><![CDATA[
+
+			<div style="padding:10px;">
+
+				<h2>Ι.Ν. Κοιμήσεως της Θεοτόκου (Μονή Φραγκαβίλλας)</h2>
+				<hr style="border:0;border-top:1px solid white;">
+				
+				Η Μονή Φραγκαβίλας κοσμεί την νοτιανατολική πλευρά της Αμαλιάδας, σε μια υπέροχη καταπράσινη τοποθεσία.
+				Το άλλοτε καθολικό της βυζαντινής μονής της Φραγκαβίλλας, παρουσιάζει τόσο ιστορικό όσο και αρχιτεκτονικό ενδιαφέρον. Στέκει αγέρωχο από τον 11ο αιώνα και είναι το μόνο κτίσμα του 
+				συγκροτήματος της μονής που έχει διατηρηθεί, ενώ οι τοιχογραφίες που σώζονται στο εσωτερικό του ναού χρονολογούνται στον 17ο αιώνα.
+				</br>
+				<a href="https://olympia.dms-tourism.eu/listing/koimiseos-tis-theotokoy-moni-fragkabillas" target="_blank">Διαβάστε περισσότερα</a>
+			</div>
+
+			]]>
+		</data>
+	</scene>
+
+	<scene name="scene_KENTRIKH_PLATEIA" title="KENTRIKH PLATEIA" onstart="" thumburl="panos/KENTRIKH_PLATEIA.tiles/thumb.jpg" lat="" lng="" heading="326.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="326.0" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/KENTRIKH_PLATEIA.tiles/preview.jpg" />
+
+		<image prealign="0|326.0|0">
+			<cube url="panos/KENTRIKH_PLATEIA.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="Ag_Athanasios" style="hotspot_ani_white" ath="230" atv="5"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKI_PLATEIA_AGIOY_ATHANASIOY,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+
+		<hotspot name="Plateia_1" style="hotspot_ani_white" ath="220" atv="0"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA_1,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Plateia_2" style="hotspot_ani_white" ath="68" atv="1"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA_2,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+				 
+
+	</scene>
+
+	<scene name="scene_KENTRIKH_PLATEIA_1" title="KENTRIKH PLATEIA_1" onstart="" thumburl="panos/KENTRIKH_PLATEIA_1.tiles/thumb.jpg" lat="" lng="" heading="270.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="271.5" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/KENTRIKH_PLATEIA_1.tiles/preview.jpg" />
+
+		<image prealign="0|271.5|0">
+			<cube url="panos/KENTRIKH_PLATEIA_1.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="Ag_Athanasios" style="hotspot_ani_white" ath="0" atv="0"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKI_PLATEIA_AGIOY_ATHANASIOY,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+
+	</scene>
+
+	<scene name="scene_KENTRIKH_PLATEIA_2" title="KENTRIKH PLATEIA_2" onstart="" thumburl="panos/KENTRIKH_PLATEIA_2.tiles/thumb.jpg" lat="37.79518333" lng="21.35092777" heading="0.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="19.7" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/KENTRIKH_PLATEIA_2.tiles/preview.jpg" />
+
+		<image prealign="0|19.7|0">
+			<cube url="panos/KENTRIKH_PLATEIA_2.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="Ag_Athanasios" style="hotspot_ani_white" ath="272" atv="2"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKI_PLATEIA_AGIOY_ATHANASIOY,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+
+		<hotspot name="Plateia" style="hotspot_ani_white" ath="277" atv="3"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+	</scene>
+
+	<scene name="scene_KENTRIKI_PLATEIA_AGIOY_ATHANASIOY" title="KENTRIKI PLATEIA AGIOY ATHANASIOY" onstart="" thumburl="panos/KENTRIKI_PLATEIA_AGIOY_ATHANASIOY.tiles/thumb.jpg" lat="37.79526943" lng="21.35009722" heading="270.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="270.9" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/KENTRIKI_PLATEIA_AGIOY_ATHANASIOY.tiles/preview.jpg" />
+
+		<image prealign="0|270.9|0">
+			<cube url="panos/KENTRIKI_PLATEIA_AGIOY_ATHANASIOY.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="Plateia_2" style="hotspot_ani_white" ath="9" atv="2"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA_2,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+
+		<hotspot name="Plateia_1" style="hotspot_ani_white" ath="164" atv="0"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA_1,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="Plateia" style="hotspot_ani_white" ath="0" atv="10"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_KENTRIKH_PLATEIA,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+	</scene>
+
+
+
+	<scene name="scene_MOUSEIO_TATANI" title="MOUSEIO TATANI" onstart="" thumburl="panos/MOUSEIO_TATANI.tiles/thumb.jpg" lat="37.80052500" lng="21.35404722" heading="284.4">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="284.4" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/MOUSEIO_TATANI.tiles/preview.jpg" />
+
+		<image prealign="0|284.4|0">
+			<cube url="panos/MOUSEIO_TATANI.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="more" style="infospot" ath="105" atv="0"
+			html="Περισσότερα"
+			css="color:#FFFFFF; font-size:12px; font-weight:bold; text-align:center;"
+			width="80" height="80"
+			bgroundedge="42"
+			bgalpha="0.75"
+			onloaded="circlepos(1,6);"
+			onclick="popup('html', get(data[data_html_agwnwn].content), 400, 200, true);"
+		/>
+		<data name="data_html_agwnwn"><![CDATA[
+
+			<div style="padding:10px;">
+
+				<h2>Οικία Τατάνη</h2>
+				<hr style="border:0;border-top:1px solid white;">
+				
+				Η Οικία Τατάνη, αποτελεί ένα αρχιτεκτονικό κόσμημα, για την πόλη της Αμαλιάδας. Κατασκευάστηκε στις αρχές του 1900, και χρησιμοποιήθηκε ως κατοικία.
+				Πρόκειται για ένα πανέμορφο νεοκλασικό, το οποίο μετά και τις απαραίτητες εργασίες αποκατάστασης, έχει μετατραπεί τα τελευταία χρόνια, σε ένα χώρο τέχνης και 
+				πολιτισμού, αφού συχνά, στις αίθουσές του, φιλοξενούνται πολύ αξιόλογες εκθέσεις, θεατρικές παραστάσεις, παρουσιάσεις βιβλίων κ.α.
+				</br>
+				<a href="https://olympia.dms-tourism.eu/listing/oikia-tatani" target="_blank">Διαβάστε περισσότερα</a>
+			</div>
+
+			]]>
+		</data>
+	</scene>
+
+	<scene name="scene_MOYSEIO_BELOGIANNI" title="MOYSEIO BELOGIANNI" onstart="" thumburl="panos/MOYSEIO_BELOGIANNI.tiles/thumb.jpg" lat="37.79639122" lng="21.35059215" heading="305.5">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="305.5" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/MOYSEIO_BELOGIANNI.tiles/preview.jpg" />
+
+		<image prealign="0|305.5|0">
+			<cube url="panos/MOYSEIO_BELOGIANNI.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="more" style="infospot" ath="68" atv="0"
+			html="Περισσότερα"
+			css="color:#FFFFFF; font-size:12px; font-weight:bold; text-align:center;"
+			width="80" height="80"
+			bgroundedge="42"
+			bgalpha="0.75"
+			onloaded="circlepos(1,6);"
+			onclick="popup('html', get(data[data_html_agwnwn].content), 400, 200, true);"
+		/>
+		<data name="data_html_agwnwn"><![CDATA[
+
+			<div style="padding:10px;">
+
+				<h2>Μόνιμη Έκθεση «Νίκος Μπελογιάννης»</h2>
+				<hr style="border:0;border-top:1px solid white;">
+				
+				Η μόνιμη έκθεση Νίκος Μπελογιάννης, φιλοξενείται στην οικία, όπου έζησε για αρκετά χρόνια, ο σπουδαίος Έλληνας αγωνιστής και σύμβολο της αριστεράς, στην Αμαλιάδα.
+				Στις αίθουσες φιλοξενούνται πλήθος αρχείων βιβλιοθηκών και συλλογών, καθώς και διάφορα αντικείμενα που σχετίζονται με τον βίο του Νίκου Μπελογιάννη. 
+				Η έκθεση ουσιαστικά αναπαριστά με πολλές και ενδιαφέρουσες λεπτομέρειες τον σύντομο βίο του, ενώ φέρνει στο φως πληροφορίες και στοιχεία τα οποία παρέμεναν για χρόνια στην αφάνεια. 
+				</br>
+				<a href="https://olympia.dms-tourism.eu/listing/monimi-ekthesi-nikos-mpelogiannis" target="_blank">Διαβάστε περισσότερα</a>
+			</div>
+
+			]]>
+		</data>
+	</scene>
+
+	<scene name="scene_PARALEIA_KOUROUTA_PEZODROMOS" title="PARALEIA KOUROUTA PEZODROMOS" onstart="" thumburl="panos/PARALEIA_KOUROUTA_PEZODROMOS.tiles/thumb.jpg" lat="37.76816110" lng="21.29542777" heading="45.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="55.6" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/PARALEIA_KOUROUTA_PEZODROMOS.tiles/preview.jpg" />
+
+		<image prealign="0|55.6|0">
+			<cube url="panos/PARALEIA_KOUROUTA_PEZODROMOS.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="Paralia" style="hotspot_ani_white" ath="-2" atv="2"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_PARALIA_KOUROUTA,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+	</scene>
+
+	<scene name="scene_PARALIA_KOUROUTA" title="PARALIA KOUROUTA" onstart="" thumburl="panos/PARALIA_KOUROUTA.tiles/thumb.jpg" lat="37.77049167" lng="21.29275277" heading="180.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="178.2" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/PARALIA_KOUROUTA.tiles/preview.jpg" />
+
+		<image prealign="0|178.2|0">
+			<cube url="panos/PARALIA_KOUROUTA.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+				<hotspot name="Pezodromos" style="hotspot_ani_white" ath="325" atv="-1"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_PARALEIA_KOUROUTA_PEZODROMOS,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="more" style="infospot" ath="72" atv="-5"
+			html="Περισσότερα"
+			css="color:#FFFFFF; font-size:12px; font-weight:bold; text-align:center;"
+			width="80" height="80"
+			bgroundedge="42"
+			bgalpha="0.75"
+			onloaded="circlepos(1,6);"
+			onclick="popup('html', get(data[data_html_agwnwn].content), 400, 200, true);"
+		/>
+		<data name="data_html_agwnwn"><![CDATA[
+
+			<div style="padding:10px;">
+
+				<h2>Παραλία Κουρούτα - Παραλία Παλούκι</h2>
+				<hr style="border:0;border-top:1px solid white;">
+				
+				Η παραλία της Κουρούτας, αποτελεί εδώ και πάρα πολλά χρόνια έναν από τους κορυφαίους παραθεριστικούς προορισμούς της Ηλείας. 
+				Γνωστή για την μαγευτική παραλία της, με την ψιλή άμμο, και τα καταγάλανα νερά, είναι ίσως η πιο τουριστική αμμουδιά του νομού. 
+				</br>
+				<a href="https://olympia.dms-tourism.eu/listing/paralia-koyroyta-paralia-paloyki" target="_blank">Διαβάστε περισσότερα</a>
+			</div>
+
+			]]>
+		</data>
+	</scene>
+
+	<scene name="scene_PARALIA_PALOYKI" title="PARALIA PALOYKI" onstart="" thumburl="panos/PARALIA_PALOYKI.tiles/thumb.jpg" lat="37.75749377" lng="21.30024917" heading="0.0">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="0.0" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/PARALIA_PALOYKI.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/PARALIA_PALOYKI.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+		<hotspot name="Paralia_Kourouta" style="hotspot_ani_white" ath="260" atv="2"
+				onclick="
+				 		  lookto(get(ath),0,35);
+		                  loadscene(scene_PARALIA_KOUROUTA,null,MERGE,BLEND(1));
+		                  lookat(183.13, 9.56, 59.66);
+		                  wait(BLEND);
+		                  oninterrupt(break);
+		                  lookto(202.65, 8.12, 105.5, smooth(100,100,200));"
+		         />
+		<hotspot name="more" style="infospot" ath="72" atv="-5"
+			html="Περισσότερα"
+			css="color:#FFFFFF; font-size:12px; font-weight:bold; text-align:center;"
+			width="80" height="80"
+			bgroundedge="42"
+			bgalpha="0.75"
+			onloaded="circlepos(1,6);"
+			onclick="popup('html', get(data[data_html_agwnwn].content), 400, 200, true);"
+		/>
+		<data name="data_html_agwnwn"><![CDATA[
+
+			<div style="padding:10px;">
+
+				<h2>Παραλία Κουρούτα - Παραλία Παλούκι</h2>
+				<hr style="border:0;border-top:1px solid white;">
+				
+				Κοντά στην Αμαλιάδα, και μόλις 1 χλμ μακριά από την δημοφιλή παραλία της Κουρούτας, βρίσκεται το Παλούκι, με το μικρό γοητευτικό λιμανάκι και την υπέροχη αμμώδη παραλία του. 
+				Είναι ένας προορισμός λιγότερο γνωστός, αλλά δεν υστερεί σε τίποτα. 
+				</br>
+				<a href="https://olympia.dms-tourism.eu/listing/paralia-koyroyta-paralia-paloyki" target="_blank">Διαβάστε περισσότερα</a>
+			</div>
+
+			]]>
+		</data>
+	</scene>
+
+	<scene name="scene_POLITISTIKO_KONTRO_AMALIADA" title="POLITISTIKO KONTRO AMALIADA" onstart="" thumburl="panos/POLITISTIKO_KONTRO_AMALIADA.tiles/thumb.jpg" lat="37.79377222" lng="21.34583888" heading="178.5">
+		
+		<control bouncinglimits="calc:image.cube ? true : false" />
+
+		<view hlookat="178.5" vlookat="0.0" fovtype="MFOV" fov="120" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+
+		<preview url="panos/POLITISTIKO_KONTRO_AMALIADA.tiles/preview.jpg" />
+
+		<image prealign="0|178.5|0">
+			<cube url="panos/POLITISTIKO_KONTRO_AMALIADA.tiles/%s/l%l/%0v/l%l_%s_%0v_%0h.jpg" multires="512,640,1280,2624,5248" />
+		</image>
+
+	</scene>
+
+
+</krpano>
